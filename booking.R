@@ -27,33 +27,38 @@ search_location$sendKeysToElement(list(orase[1]))
   
 search_date_in <- rmdSel$findElement(using = "css", value = "div.sb-searchbox__input:nth-child(1)")
 search_date_in$clickElement()
-
 search_date_in <- rmdSel$findElement(using = "css", value = "div.bui-calendar__control.bui-calendar__control--next")
 search_date_in$clickElement()
-  
 search_date_in <- rmdSel$findElement(using = "css", value = "div.bui-calendar__display")
 search_date_in_cin <- rmdSel$findElement(using  = "css", value = "[data-date = '2019-11-08']")
 search_date_in_cin$clickElement()
 search_date_in_cout <- rmdSel$findElement(using  = "css", value = "[data-date = '2019-11-10']")
 search_date_in_cout$clickElement()
  
-search_nr_pers <- rmdSel$findElement(using = "css", value = "div.xp__input-group>label.xp__input")
-search_nr_pers$clickElement() 
+# 1 persoana
+# search_nr_pers <- rmdSel$findElement(using = "css", value = "div.xp__input-group>label.xp__input")
+# search_nr_pers$clickElement() 
+# one_pers <- rmdSel$findElement(using = "css", value = "div.sb-group__field-adults>div.bui-stepper>div.bui-stepper__wrapper>button>span")
+# one_pers$clickElement()  
 
-one_pers <- rmdSel$findElement(using = "css", value = "div.sb-group__field-adults>div.bui-stepper>div.bui-stepper__wrapper>button>span")
-one_pers$clickElement()  
-
+# Cauta
 search_send <- rmdSel$findElement(using  = "css", value = "button.sb-searchbox__button")
 search_send$clickElement()
-  
-try({
-    hotels_only <- rmdSel$findElement(using  = "xpath", value = "//span[contains(., 'Hotels') and @class = 'filter_label']")
-    hotels_only$clickElement()
-    hotels_only <- rmdSel$findElement(using  = "xpath", value = "//span[contains(., 'Guesthouses')]")
-    hotels_only$clickElement()
-  }, silent = TRUE)
-  # no_nigths <- rmdSel$findElement(using = "xpath", value = "//span[contains(., 'For 2 nights')]")
-  # no_nigths$clickElement()
+
+# Stele
+st <- rmdSel$findElement(using = "css", value = "div.filterbox>div.filteroptions > a[data-id=\"class-3\"]")
+st$clickElement()
+st4 <- rmdSel$findElement(using = "css", value = "div.filterbox>div.filteroptions > a[data-id=\"class-4\"]")
+st4$clickElement()
+
+# Hotel
+hot <- rmdSel$findElement(using = "css", value = "div.filterbox>div.filteroptions > a[data-id=\"ht_id-204\"]")
+hot$clickElement()
+
+# Numai camere disponibile
+cam <- rmdSel$findElement(using = "css", value = "div.filterbox[id=\"filter_out_of_stock\"]>div.filteroptions>a[data-id=\"oos-1\"]")
+cam$clickElement()
+
 
 try({
     no_pages <- rmdSel$findElement(using = "css", value = "li.bui-pagination__item:nth-last-child(1) > a > div:nth-child(2)")
@@ -65,15 +70,16 @@ try({
 oras <- list()
 for(j in 1:no_pages1){
   rmdSel$executeScript(script = "window.scrollTo(0, document.body.scrollHeight);")
-  booking <- read_html(rmdSel$getPageSource()[[j]])  
+  booking <- read_html(rmdSel$getPageSource()[[1]])  
   
+  stele <- booking %>% html_nodes(css = "i.bk-icon-wrapper>span.invisible_spoken") %>% html_text()
   hotel_name <- booking %>% html_nodes(css = "span.sr-hotel__name") %>% html_text()
-  stele <- booking %>% html_nodes(css = "span.sr-hotel__name, div.sr_item_main_block > i[title]") %>% html_text()
+  distanta <- booking %>% html_nodes(css = "div.sr_card_address_line>span:not([class])")%>% html_text()
+  
   pret <- booking %>% html_nodes(css = "strong.price, div.prco-ltr-right-align-helper") %>% html_text()
   tip_camera <- booking %>% html_nodes(css = "span.room_link > strong") %>% html_text()
   mic_dejun <- booking %>% html_nodes(css = "span.sr-hotel__name, sup.sr_room_reinforcement") %>% html_text()
   disponibilitate <- booking %>% html_nodes(css = "a.hotel_name_link.url") %>% html_text()
-  distanta <-  booking %>% html_nodes(css = ".distfromdest_clean") %>% html_text()
     
   oras[[j]] <- list(hotel_name = hotel_name,
                     stele = stele, 
@@ -97,21 +103,17 @@ for(j in 1:no_pages1){
 names(booking_data) <- orase
 
 
+try({
+  hotels_only <- rmdSel$findElement(using  = "xpath", value = "//span[contains(., 'Hotels') and @class = 'filter_label']")
+  hotels_only$clickElement()
+  hotels_only <- rmdSel$findElement(using  = "xpath", value = "//span[contains(., 'Guesthouses')]")
+  hotels_only$clickElement()
+}, silent = TRUE)
+# no_nigths <- rmdSel$findElement(using = "xpath", value = "//span[contains(., 'For 2 nights')]")
+# no_nigths$clickElement()
+  
+  
 
-x <- read_html("https://www.booking.com/searchresults.ro.html?label=gen173nr-1FCAEoggI46AdIM1gEaMABiAEBmAEguAEXyAEP2AEB6AEB-AELiAIBqAIDuAK-8tLrBcACAQ&sid=59510b199f80252755baac8448d29868&sb=1&src=index&src_elem=sb&error_url=https%3A%2F%2Fwww.booking.com%2Findex.ro.html%3Flabel%3Dgen173nr-1FCAEoggI46AdIM1gEaMABiAEBmAEguAEXyAEP2AEB6AEB-AELiAIBqAIDuAK-8tLrBcACAQ%3Bsid%3D59510b199f80252755baac8448d29868%3Bsb_price_type%3Dtotal%26%3B&ss=Bucure%C8%99ti%2C+Regiunea+Bucuresti+-+Ilfov%2C+Rom%C3%A2nia&is_ski_area=0&checkin_monthday=8&checkin_month=11&checkin_year=2019&checkout_monthday=10&checkout_month=11&checkout_year=2019&group_adults=2&group_children=0&no_rooms=1&b_h4u_keep_filters=&from_sf=1&ss_raw=Bucuresti&ac_position=0&ac_langcode=ro&ac_click_type=b&dest_id=-1153951&dest_type=city&iata=BUH&place_id_lat=44.4333&place_id_lon=26.1&search_pageview_id=9b133a5f4ad8019f&search_selected=true") %>%
-     html_nodes("div.filterbox>div.filteroptions > a[data-id=\"class-3\"]") %>%
-     html_text("href")
-
-  booking %>%
-  html_nodes("div.filterbox>div.filteroptions > a[data-id=\"class-3\"]") %>%
-  html_attr("href")
-  
-  
-  st <- rmdSel$findElement(using = "css", value = "div.filterbox>div.filteroptions > a[data-id=\"class-3\"]")
-  st$clickElement()
-  
-  st4 <- rmdSel$findElement(using = "css", value = "div.filterbox>div.filteroptions > a[data-id=\"class-4\"]")
-  st4$clickElement()
 
 # 2. Salvare date ===================================================================================================
 
