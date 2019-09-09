@@ -80,7 +80,6 @@ if (isTRUE(anulare_gratuita)) {
   ram$clickElement()
 }
 
-
 try({
     no_pages <- rmdSel$findElement(using = "css", value = "li.bui-pagination__item:nth-last-child(1) > a > div:nth-child(2)")
     no_pages <- no_pages$getElementText()[[1]] 
@@ -116,16 +115,21 @@ for(j in 1:no_pages1){
     Sys.sleep(2)
 }
 
-if (nr_pers = 2 & anulare_gratuita = TRUE) {
+if (isTRUE(anulare_gratuita)) {
+  names(df)[6] <- "pret_rambursabil"
+} else {
+  names(df)[6] <- "pret_nerambursabil"
+}
+
+if (nr_pers == 2 & anulare_gratuita == TRUE) {
   df2t <- df
-}else if (nr_pers = 2 & anulare_gratuita = FALSE) {
+}else if (nr_pers == 2 & anulare_gratuita == FALSE) {
   df2f <- df
-}else if (nr_pers = 1 & anulare_gratuita = TRUE) {
+}else if (nr_pers == 1 & anulare_gratuita == TRUE) {
   df1t <- df
 }else {
   df1f <- df
 }
-
 
 
 clean <- function (df) {
@@ -138,10 +142,20 @@ clean <- function (df) {
   df$pret <- gsub("\n", "", df$pret)
   df$pret <- gsub("\\.", "", df$pret)
   df$pret <- as.numeric(gsub("([0-9]+).*$", "\\1", df$pret))
+  pers_nopti <- data.frame(do.call(rbind, strsplit(df$nr_nopti, ",", fixed=TRUE)))
+  names(pers_nopti) <- c("nr_nopti", "nr_pers")
+  df <- df[,-c(5)]
+  df <- cbind(df, pers_nopti)
+  df$culegere <- "1sept"
+  df$sejur <- "8noi"
+  df$mic_dejun <- "DA"
   return (df)
 }
 
-c <- clean(df2t)
+df2t <- clean(df2t)
+df2f <- clean(df2f)
+df1t <- clean(df1t)
+df1f <- clean(df1f)
 
 
 df2j <- df2f %>% left_join(df2t[,c(2,6)], by=c("nume_hotel"="nume_hotel"))
