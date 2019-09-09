@@ -6,16 +6,15 @@ library(RSelenium)
 library(xml2)
 library(rvest)
 
-
 orase <- c("Bucuresti")
+
+# Parametrii pentru filtre
+nr_pers = 2
+
 
 rmdSel <- remoteDriver(remoteServerAddr = "127.0.0.1",
                        port = 4444L,
                        browserName = "firefox")
-
-# driver<- rsDriver(browser=c("firefox"))
-# remDr <- driver[["client"]]
-# remDr$open()
 
 booking_data <- list()
 
@@ -35,17 +34,18 @@ search_date_in_cin$clickElement()
 search_date_in_cout <- rmdSel$findElement(using  = "css", value = "[data-date = '2019-11-10']")
 search_date_in_cout$clickElement()
  
-# 1 persoana
-# search_nr_pers <- rmdSel$findElement(using = "css", value = "div.xp__input-group>label.xp__input")
-# search_nr_pers$clickElement() 
-# one_pers <- rmdSel$findElement(using = "css", value = "div.sb-group__field-adults>div.bui-stepper>div.bui-stepper__wrapper>button>span")
-# one_pers$clickElement()  
-
+if (nr_pers == 1) {
+  search_nr_pers <- rmdSel$findElement(using = "css", value = "div.xp__input-group>label.xp__input")
+  search_nr_pers$clickElement()
+  one_pers <- rmdSel$findElement(using = "css", value = "div.sb-group__field-adults>div.bui-stepper>div.bui-stepper__wrapper>button>span")
+  one_pers$clickElement()
+}
+  
 # Cauta
 search_send <- rmdSel$findElement(using  = "css", value = "button.sb-searchbox__button")
 search_send$clickElement()
 
-# Stele
+# Numar de stele
 st <- rmdSel$findElement(using = "css", value = "div.filterbox>div.filteroptions > a[data-id=\"class-3\"]")
 st$clickElement()
 st4 <- rmdSel$findElement(using = "css", value = "div.filterbox>div.filteroptions > a[data-id=\"class-4\"]")
@@ -58,6 +58,34 @@ hot$clickElement()
 # Numai camere disponibile
 cam <- rmdSel$findElement(using = "css", value = "div.filterbox[id=\"filter_out_of_stock\"]>div.filteroptions>a[data-id=\"oos-1\"]")
 cam$clickElement()
+
+# # Lant hotelier
+# if (nr_pers == 2) {
+#   lant1 <- rmdSel$findElement(using = "css", value = "div.filteroptions>a[data-id=\"chaincode-1029\"]")
+#   lant1$clickElement()
+#   lant2 <- rmdSel$findElement(using = "css", value = "div.filteroptions>a[data-id=\"chaincode-1051\"]")
+#   lant2$clickElement()
+#   lant3 <- rmdSel$findElement(using = "css", value = "div.filteroptions>a[data-id=\"chaincode-1050\"]")
+#   lant3$clickElement()
+#   lant4 <- rmdSel$findElement(using = "css", value = "div.filteroptions>a[data-id=\"chaincode-1045\"]")
+#   lant4$clickElement()
+#   lant5 <- rmdSel$findElement(using = "css", value = "div.filteroptions>a[data-id=\"chaincode-1053\"]")
+#   lant5$clickElement()
+# } else {
+#   lant1 <- rmdSel$findElement(using = "css", value = "div.filteroptions>a[data-id=\"chaincode-1029\"]")
+#   lant1$clickElement()
+#   lant5 <- rmdSel$findElement(using = "css", value = "div.filteroptions>a[data-id=\"chaincode-1053\"]")
+#   lant5$clickElement()
+# }
+
+# Mic dejun
+dejun <- rmdSel$findElement(using = "css", value = "div[id=\"filter_mealplan\"]>div.filteroptions>a.filterelement")
+dejun$clickElement()
+
+# Pret RAMBURASBIL(anulare gratuita)/NERAMBURSABIL
+ram <- rmdSel$findElement(using = "css", value = "div[id=\"filter_fc\"]>div.filteroptions>a.filterelement")
+ram$clickElement()
+
 
 
 try({
@@ -75,12 +103,10 @@ for(j in 1:no_pages1){
   stele <- booking %>% html_nodes(css = "i.bk-icon-wrapper>span.invisible_spoken") %>% html_text()
   hotel_name <- booking %>% html_nodes(css = "span.sr-hotel__name") %>% html_text()
   distanta <- booking %>% html_nodes(css = "div.sr_card_address_line>span:not([class])")%>% html_text()
+  pret <- booking %>% html_nodes(css = "div.bui-price-display__value") %>% html_text()
+  tip_camera <- booking %>% html_nodes(css = "a.room_link>strong") %>% html_text()
+  nr_nopti <- booking %>%  html_nodes(css = "div.prco-ltr-right-align-helper>div.bui-price-display__label") %>% html_text()
   
-  pret <- booking %>% html_nodes(css = "strong.price, div.prco-ltr-right-align-helper") %>% html_text()
-  tip_camera <- booking %>% html_nodes(css = "span.room_link > strong") %>% html_text()
-  mic_dejun <- booking %>% html_nodes(css = "span.sr-hotel__name, sup.sr_room_reinforcement") %>% html_text()
-  disponibilitate <- booking %>% html_nodes(css = "a.hotel_name_link.url") %>% html_text()
-    
   oras[[j]] <- list(hotel_name = hotel_name,
                     stele = stele, 
                     pret = pret, 
@@ -139,4 +165,5 @@ rm(list = ls())
 saveRDS(booking_data, "booking_19_21_vineri.rds")
 rm(list = ls())
 
-*label.bui-checkbox>div.bui-checkbox__label>span.filter_label
+hotel_name2 <- booking %>% html_nodes(css = "span.sr-hotel__name") %>% html_text()
+pret2 <- booking %>% html_nodes(css = "div.bui-price-display__value") %>% html_text()
