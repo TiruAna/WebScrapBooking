@@ -9,7 +9,12 @@ library(rvest)
 orase <- c("Bucuresti")
 
 # Parametrii pentru filtre
-nr_pers = 2
+nr_pers = 2; anulare_gratuita = TRUE
+nr_pers = 2; anulare_gratuita = FALSE
+
+nr_pers = 1; anulare_gratuita = TRUE
+nr_pers = 1; anulare_gratuita = FALSE
+
 
 
 rmdSel <- remoteDriver(remoteServerAddr = "127.0.0.1",
@@ -20,7 +25,13 @@ booking_data <- list()
 
 rmdSel$open()
 rmdSel$navigate("https://www.booking.com/")
-  
+
+lang <- rmdSel$findElement(using = "css", value = "a.popover_trigger>img")
+lang$clickElement()
+
+ro <- rmdSel$findElement(using = "css", value = "a[hreflang=\"ro\"].no_target_blank>span.seldescription")
+ro$clickElement()
+
 search_location <- rmdSel$findElement(using = "css", value = "[name = 'ss']")
 search_location$sendKeysToElement(list(orase[1]))
   
@@ -59,33 +70,15 @@ hot$clickElement()
 cam <- rmdSel$findElement(using = "css", value = "div.filterbox[id=\"filter_out_of_stock\"]>div.filteroptions>a[data-id=\"oos-1\"]")
 cam$clickElement()
 
-# # Lant hotelier
-# if (nr_pers == 2) {
-#   lant1 <- rmdSel$findElement(using = "css", value = "div.filteroptions>a[data-id=\"chaincode-1029\"]")
-#   lant1$clickElement()
-#   lant2 <- rmdSel$findElement(using = "css", value = "div.filteroptions>a[data-id=\"chaincode-1051\"]")
-#   lant2$clickElement()
-#   lant3 <- rmdSel$findElement(using = "css", value = "div.filteroptions>a[data-id=\"chaincode-1050\"]")
-#   lant3$clickElement()
-#   lant4 <- rmdSel$findElement(using = "css", value = "div.filteroptions>a[data-id=\"chaincode-1045\"]")
-#   lant4$clickElement()
-#   lant5 <- rmdSel$findElement(using = "css", value = "div.filteroptions>a[data-id=\"chaincode-1053\"]")
-#   lant5$clickElement()
-# } else {
-#   lant1 <- rmdSel$findElement(using = "css", value = "div.filteroptions>a[data-id=\"chaincode-1029\"]")
-#   lant1$clickElement()
-#   lant5 <- rmdSel$findElement(using = "css", value = "div.filteroptions>a[data-id=\"chaincode-1053\"]")
-#   lant5$clickElement()
-# }
-
 # Mic dejun
 dejun <- rmdSel$findElement(using = "css", value = "div[id=\"filter_mealplan\"]>div.filteroptions>a.filterelement")
 dejun$clickElement()
 
 # Pret RAMBURASBIL(anulare gratuita)/NERAMBURSABIL
-ram <- rmdSel$findElement(using = "css", value = "div[id=\"filter_fc\"]>div.filteroptions>a.filterelement")
-ram$clickElement()
-
+if (isTRUE(anulare_gratuita)) {
+  ram <- rmdSel$findElement(using = "css", value = "div[id=\"filter_fc\"]>div.filteroptions>a.filterelement")
+  ram$clickElement()
+}
 
 
 try({
@@ -95,7 +88,7 @@ try({
   }, silent = TRUE
   )
   
-oras <- list()
+df <- data.frame()
 for(j in 1:no_pages1){
   rmdSel$executeScript(script = "window.scrollTo(0, document.body.scrollHeight);")
   booking <- read_html(rmdSel$getPageSource()[[1]])  
@@ -107,13 +100,13 @@ for(j in 1:no_pages1){
   tip_camera <- booking %>% html_nodes(css = "a.room_link>strong") %>% html_text()
   nr_nopti <- booking %>%  html_nodes(css = "div.prco-ltr-right-align-helper>div.bui-price-display__label") %>% html_text()
   
-  oras[[j]] <- list(hotel_name = hotel_name,
-                    stele = stele, 
-                    pret = pret, 
-                    tip_camera = tip_camera, 
-                    mic_dejun = mic_dejun, 
-                    disponibilitate = disponibilitate,
-                    distanta = distanta)
+  df1 <- data.frame(nr_stele = stele,
+                    nume_hotel = hotel_name,
+                    distanta = distanta,
+                    tip_camera = tip_camera,
+                    nr_nopti = nr_nopti, 
+                    pret = pret)
+  df <- rbind(df, df1)
     
   try({
     next_page <- rmdSel$findElement(using = "css", value = "a.paging-next")
@@ -122,48 +115,16 @@ for(j in 1:no_pages1){
     )
     Sys.sleep(2)
 }
-  booking_data[[1]] <- oras
-  rmdSel$close()
 
-
-names(booking_data) <- orase
-
-
-try({
-  hotels_only <- rmdSel$findElement(using  = "xpath", value = "//span[contains(., 'Hotels') and @class = 'filter_label']")
-  hotels_only$clickElement()
-  hotels_only <- rmdSel$findElement(using  = "xpath", value = "//span[contains(., 'Guesthouses')]")
-  hotels_only$clickElement()
-}, silent = TRUE)
-# no_nigths <- rmdSel$findElement(using = "xpath", value = "//span[contains(., 'For 2 nights')]")
-# no_nigths$clickElement()
-  
-  
-
-
-# 2. Salvare date ===================================================================================================
+if (nr_pers = 2 & anulare_gratuita = TRUE) {
+  df2t <- df
+}else if (nr_pers = 2 & anulare_gratuita = FALSE) {
+  df2f <- df
+}else if (nr_pers = 1 & anulare_gratuita = TRUE) {
+  df1t <- df
+}else {
+  df1f <- df
+}
 
 
 
-# 1. Luni
-saveRDS(booking_data, "booking_19_21_luni.rds")
-rm(list = ls())
-
-# 2. Marti
-saveRDS(booking_data, "booking_19_21_marti.rds")
-rm(list = ls())
-
-# 3. Miercuri
-saveRDS(booking_data, "booking_19_21_miercuri.rds")
-rm(list = ls())
-
-# 4. Joi
-saveRDS(booking_data, "booking_19_21_joi.rds")
-rm(list = ls())
-
-# 5. Vineri
-saveRDS(booking_data, "booking_19_21_vineri.rds")
-rm(list = ls())
-
-hotel_name2 <- booking %>% html_nodes(css = "span.sr-hotel__name") %>% html_text()
-pret2 <- booking %>% html_nodes(css = "div.bui-price-display__value") %>% html_text()
