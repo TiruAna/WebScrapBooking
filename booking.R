@@ -128,3 +128,21 @@ if (nr_pers = 2 & anulare_gratuita = TRUE) {
 
 
 
+clean <- function (df) {
+  df <- unique(df)
+  for (i in 1:ncol(df)) {
+    df[,c(i)] <- as.character(df[,c(i)])
+  }
+  df$nume_hotel <- gsub("\n", "", df$nume_hotel)
+  df$distanta <- gsub("\n", "", df$distanta)
+  df$pret <- gsub("\n", "", df$pret)
+  df$pret <- gsub("\\.", "", df$pret)
+  df$pret <- as.numeric(gsub("([0-9]+).*$", "\\1", df$pret))
+  return (df)
+}
+
+c <- clean(df2t)
+
+
+df2j <- df2f %>% left_join(df2t[,c(2,6)], by=c("nume_hotel"="nume_hotel"))
+
