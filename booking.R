@@ -21,8 +21,6 @@ rmdSel <- remoteDriver(remoteServerAddr = "127.0.0.1",
                        port = 4444L,
                        browserName = "firefox")
 
-booking_data <- list()
-
 rmdSel$open()
 rmdSel$navigate("https://www.booking.com/")
 
@@ -139,18 +137,20 @@ clean <- function (df) {
   }
   df$nume_hotel <- gsub("\n", "", df$nume_hotel)
   df$distanta <- gsub("\n", "", df$distanta)
-  df$pret <- gsub("\n", "", df$pret)
-  df$pret <- gsub("\\.", "", df$pret)
-  df$pret <- as.numeric(gsub("([0-9]+).*$", "\\1", df$pret))
+  df[,c(6)] <- gsub("\n", "", df[,c(6)])
+  df[,c(6)] <- gsub("\\.", "", df[,c(6)])
+  df[,c(6)] <- as.numeric(gsub("([0-9]+).*$", "\\1", df[,c(6)]))
   pers_nopti <- data.frame(do.call(rbind, strsplit(df$nr_nopti, ",", fixed=TRUE)))
   names(pers_nopti) <- c("nr_nopti", "nr_pers")
   df <- df[,-c(5)]
   df <- cbind(df, pers_nopti)
-  df$culegere <- "1sept"
+  df$culegere <- Sys.Date()
   df$sejur <- "8noi"
   df$mic_dejun <- "DA"
   return (df)
 }
+c = clean(df2t)
+
 
 df2t <- clean(df2t)
 df2f <- clean(df2f)
@@ -160,3 +160,9 @@ df1f <- clean(df1f)
 
 df2j <- df2f %>% left_join(df2t[,c(2,6)], by=c("nume_hotel"="nume_hotel"))
 
+write.csv(df2t, "df2t.csv")
+write.csv(df2f, "df2f.csv")
+write.csv(df1t, "df1t.csv")
+write.csv(df1f, "df1f.csv")
+
+df2tt <- clean(df2tt)
