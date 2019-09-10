@@ -9,18 +9,21 @@ library(rvest)
 orase <- c("Bucuresti")
 
 # Parametrii pentru filtre
-
 data1 = c("[data-date = '2019-11-08']", "[data-date = '2019-11-10']")
 data2 = c("[data-date = '2019-11-15']", "[data-date = '2019-11-17']")
 data3 = c("[data-date = '2019-11-22']", "[data-date = '2019-11-24']")
-data4 = c("[data-date = '2019-11-06']", "[data-date = '2019-11-07']")
-data5 = c("[data-date = '2019-11-13']", "[data-date = '2019-11-14']")
-data6 = c("[data-date = '2019-11-20']", "[data-date = '2019-11-21']")
-data7 = c("[data-date = '2019-11-27']", "[data-date = '2019-11-28']")
-sejur_list = list(data1, data2, data3, data4,data5, data6, data7)
+sejur_list = list(data1, data2, data3)
+nr_pers = 2; anulare_gratuita = TRUE
+nr_pers = 2; anulare_gratuita = FALSE
 
-anulare_gratuita = TRUE
-anulare_gratuita = FALSE
+
+data1 = c("[data-date = '2019-11-06']", "[data-date = '2019-11-07']")
+data2 = c("[data-date = '2019-11-13']", "[data-date = '2019-11-14']")
+data3 = c("[data-date = '2019-11-20']", "[data-date = '2019-11-21']")
+data4 = c("[data-date = '2019-11-27']", "[data-date = '2019-11-28']")
+sejur_list = list(data1, data2, data3, data4)
+nr_pers = 1; anulare_gratuita = TRUE
+nr_pers = 1; anulare_gratuita = FALSE
 
 df_fin <- data.frame()
 for (i in 1:length(sejur_list)) {  
@@ -135,10 +138,14 @@ for (i in 1:length(sejur_list)) {
 }
 
 
-if (anulare_gratuita == TRUE) {
+if (nr_pers == 2 & anulare_gratuita == TRUE) {
   df2t <- df_fin
-}else {
+}else if (nr_pers == 2 & anulare_gratuita == FALSE) {
   df2f <- df_fin
+}else if (nr_pers == 1 & anulare_gratuita == TRUE) {
+  df1t <- df_fin
+}else {
+  df1f <- df_fin
 }
 
 clean <- function (df) {
@@ -163,10 +170,16 @@ clean <- function (df) {
 
 df2tc <- clean(df2t)
 df2fc <- clean(df2f)
+df1tc <- clean(df1t)
+df1fc <- clean(df1f)
 
 
 df2j <- df2fc %>% left_join(df2tc[,c(2,6,7)], by=c("nume_hotel"="nume_hotel","sejur"="sejur"))
 df2j <- unique(df2j)
+df1j <- df1fc %>% left_join(df1tc[,c(2,6,7)], by=c("nume_hotel"="nume_hotel","sejur"="sejur"))
+df1j <- unique(df1j)
+
+dfjfin <- rbind(df2j, df1j)
 
 
-write.csv(df2j, paste0("hotel2_", Sys.Date(), ".csv"))
+write.csv(dfjfin, paste0("hotel2_", Sys.Date(), ".csv"))
