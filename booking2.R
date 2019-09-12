@@ -30,7 +30,6 @@ for (i in 1:length(sejur_list)) {
   rmdSel <- remoteDriver(remoteServerAddr = "127.0.0.1",
                          port = 4444L,
                          browserName = "firefox")
-  
   rmdSel$open()
   rmdSel$navigate("https://www.booking.com/")
   
@@ -106,7 +105,8 @@ for (i in 1:length(sejur_list)) {
     z2 <- strsplit(gsub("\\]|\\'", "", sejur_list[[i]][2]), "-", fixed = TRUE)[[1]][4]
     period <- paste(paste(z1, z2, sep = "-"), "nov", sep = " ")
     sejur <- rep(period, length(hotel_name))
-    
+    print(hotel_name)
+    print(distanta)
     df1 <- data.frame(nr_stele = stele,
                       nume_hotel = hotel_name,
                       distanta = distanta,
