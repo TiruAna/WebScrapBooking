@@ -96,17 +96,16 @@ for (i in 1:length(sejur_list)) {
     stele <- booking %>% html_nodes(css = "i.bk-icon-wrapper>span.invisible_spoken") %>% html_text()
     hotel_name <- booking %>% html_nodes(css = "span.sr-hotel__name") %>% html_text()
     distanta <- booking %>% html_nodes(css = "div.sr_card_address_line>span:not([class])")%>% html_text()
-    pret <- booking %>% html_nodes(css = "div.bui-price-display__value") %>% html_text()
-    tip_camera <- booking %>% html_nodes(css = "a.room_link>strong") %>% html_text()
-    nr_nopti <- booking %>%  html_nodes(css = "div.prco-ltr-right-align-helper>div.bui-price-display__label") %>% html_text()
+    pret <- booking %>% html_nodes(css = "div.room_details>div>div>div:first-child>div.roomPrice>div.prco-wrapper>div>div.bui-price-display__value") %>% html_text()
+    tip_camera <- booking %>% html_nodes(css = "div.room_details>div>div>div:first-child>div.roomName>div>a.room_link>strong") %>% html_text()
+    nr_nopti <- booking %>%  html_nodes(css = "div.room_details>div>div>div:first-child>div.roomPrice>div.prco-wrapper>div.prco-ltr-right-align-helper>div.bui-price-display__label") %>% html_text()
     
     culegere <- rep(Sys.Date(), length(hotel_name))
     z1 <- strsplit(gsub("\\]|\\'", "", sejur_list[[i]][1]), "-", fixed = TRUE)[[1]][4]
     z2 <- strsplit(gsub("\\]|\\'", "", sejur_list[[i]][2]), "-", fixed = TRUE)[[1]][4]
     period <- paste(paste(z1, z2, sep = "-"), "nov", sep = " ")
     sejur <- rep(period, length(hotel_name))
-    print(hotel_name)
-    print(distanta)
+
     df1 <- data.frame(nr_stele = stele,
                       nume_hotel = hotel_name,
                       distanta = distanta,
