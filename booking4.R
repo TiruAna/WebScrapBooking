@@ -7,6 +7,7 @@
 library(RSelenium)
 library(xml2)
 library(rvest)
+library(dplyr)
 
 orase <- c("Bucuresti")
 
@@ -49,45 +50,45 @@ for (i in 1:length(sejur_list)) {
   search_date_in_cout <- rmdSel$findElement(using  = "css", value = sejur_list[[i]][2])
   search_date_in_cout$clickElement()
   
-  if (nr_pers == 1) {
-    search_nr_pers <- rmdSel$findElement(using = "css", value = "div.xp__input-group>label.xp__input")
-    search_nr_pers$clickElement()
-    one_pers <- rmdSel$findElement(using = "css", value = "div.sb-group__field-adults>div.bui-stepper>div.bui-stepper__wrapper>button>span")
-    one_pers$clickElement()
-  }
-  
   # Cauta
   search_send <- rmdSel$findElement(using  = "css", value = "button.sb-searchbox__button")
   search_send$clickElement()
   
-  # Numar de stele
-  st <- rmdSel$findElement(using = "css", value = "div.filterbox>div.filteroptions > a[data-id=\"class-1\"]")
-  st$clickElement()
-  
   # Hotel
   hot <- rmdSel$findElement(using = "css", value = "div.filterbox>div.filteroptions > a[data-id=\"ht_id-204\"]")
   hot$clickElement()
+  Sys.sleep(2)
   
   # Numai camere disponibile
   cam <- rmdSel$findElement(using = "css", value = "div.filterbox[id=\"filter_out_of_stock\"]>div.filteroptions>a[data-id=\"oos-1\"]")
   cam$clickElement()
+  Sys.sleep(2)
   
   # Baie privata
-  baie <- rmdSel$findElement(using = "css", value = "div.filterbox[id=\"filter_out_of_stock\"]>div.filteroptions>a[data-id=\"oos-1\"]")
+  baie <- rmdSel$findElement(using = "css", value = "div.filteroptions>a[data-id=\"roomfacility-38\"]" )
   baie$clickElement()
-  
+  # "div.filterbox[id=\"filter_min_bathrooms\"]>div.filteroptions>a[data-id=\"min_bathrooms-1\"]"
+  Sys.sleep(2)
   
   # Pret RAMBURASBIL(anulare gratuita)/NERAMBURSABIL
   if (isTRUE(anulare_gratuita)) {
     ram <- rmdSel$findElement(using = "css", value = "div[id=\"filter_fc\"]>div.filteroptions>a.filterelement")
     ram$clickElement()
   }
+  Sys.sleep(2)
   
   # Mic dejun
   if (isTRUE(mic_dejun_inclus)) {
-    dejun <- rmdSel$findElement(using = "css", value = "div[id=\"filter_mealplan\"]>div.filteroptions>a.filterelement")
+    dejun <- rmdSel$findElement(using = "css", value = "div[id=\"filter_mealplan\"]>div.filteroptions>a[data-id=\"mealplan-1\"]")
     dejun$clickElement()
+    #"div[id=\"filter_mealplan\"]>div.filteroptions>a.filterelement"
   }
+  Sys.sleep(2)
+  
+  # Numar de stele
+  st <- rmdSel$findElement(using = "css", value = "div.filterbox>div.filteroptions > a[data-id=\"class-1\"]")
+  st$clickElement()
+  Sys.sleep(2)
   
   no_pages1 <- 1
   try({
@@ -108,6 +109,9 @@ for (i in 1:length(sejur_list)) {
     pret <- booking %>% html_nodes(css = "div.room_details>div>div>div:first-child>div.roomPrice>div.prco-wrapper>div>div.bui-price-display__value") %>% html_text()
     tip_camera <- booking %>% html_nodes(css = "div.room_details>div>div>div:first-child>div.roomName>div>a.room_link>strong") %>% html_text()
     nr_nopti <- booking %>%  html_nodes(css = "div.room_details>div>div>div:first-child>div.roomPrice>div.prco-wrapper>div.prco-ltr-right-align-helper>div.bui-price-display__label") %>% html_text()
+    
+    print(stele)
+    print(hotel_name)
     
     culegere <- rep(Sys.Date(), length(hotel_name))
     z1 <- strsplit(gsub("\\]|\\'", "", sejur_list[[i]][1]), "-", fixed = TRUE)[[1]][4]
@@ -166,7 +170,6 @@ clean <- function (df) {
   names(pers_nopti) <- c("nr_nopti", "nr_pers")
   df <- df[,-c(5)]
   df <- cbind(df, pers_nopti)
-  df$mic_dejun <- "DA"
   return (df)
 }
 
@@ -175,12 +178,14 @@ df2tc <- clean(df2t)
 df2fc <- clean(df2f)
 
 
-df2j <- df2fc %>% left_join(df2tc[,c(2,6,7)], by=c("nume_hotel"="nume_hotel","sejur"="sejur"))
+df2j <- df2fc %>% left_join(df2tc[,c(2,6,8)], by=c("nume_hotel"="nume_hotel","sejur"="sejur"))
 df2j <- unique(df2j)
 
+df2j$distanta <- gsub("la", "", df2j$distanta)
+df2j$distanta <- gsub("de centru", "", df2j$distanta)
+df2j$distanta <- trimws(df2j$distanta)
 
-
-write.csv(dfjfin, paste0("hotel4_", Sys.Date(), ".csv"))
+write.csv(df2j, paste0("hotel4_", Sys.Date(), ".csv"))
 
 
 
