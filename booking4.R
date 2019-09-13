@@ -184,6 +184,9 @@ df2j <- unique(df2j)
 df2j$distanta <- gsub("la", "", df2j$distanta)
 df2j$distanta <- gsub("de centru", "", df2j$distanta)
 df2j$distanta <- trimws(df2j$distanta)
+km <- grep("km", df2j$distanta)
+df2j$distanta_km[km] <- df2j$distanta[km]
+
 
 write.csv(df2j, paste0("hotel4_", Sys.Date(), ".csv"))
 
