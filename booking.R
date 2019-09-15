@@ -185,5 +185,26 @@ df1j <- unique(df1j)
 
 dfjfin <- rbind(df2j, df1j)
 
+distance <- function (df) {
+  df$distanta <- gsub("la", "", df$distanta)
+  df$distanta <- gsub("de centru", "", df$distanta)
+  df$distanta <- trimws(df$distanta)
+  km <- grep("km", df$distanta)
+  df$distanta_km <- ""
+  df$distanta_m <- ""
+  df$distanta_km[km] <- df$distanta[km]
+  m <- seq(from = 1, to = nrow(df), by = 1)[-km]
+  df$distanta_m[m] <- df$distanta[m]
+  df$distanta_km <- trimws(gsub("km", "", df$distanta_km))
+  df$distanta_m <- trimws(gsub("m", "", df$distanta_m))
+  df$distanta_km <- as.numeric(gsub(",", ".", df$distanta_km))
+  df$distanta_m <- as.integer(df$distanta_m)
+  df <- df[,-c(3)]
+  return(df)
+}
+
+dfjfin <- distance(dfjfin)
 
 write.csv(dfjfin, paste0("hotel1_", Sys.Date(), ".csv"))
+
+
