@@ -64,30 +64,37 @@ for (i in 1:length(sejur_list)) {
   # Cauta
   search_send <- rmdSel$findElement(using  = "css", value = "button.sb-searchbox__button")
   search_send$clickElement()
+  Sys.sleep(2)
+  
+  # Numai camere disponibile
+  cam <- rmdSel$findElement(using = "css", value = "div.filterbox[id=\"filter_out_of_stock\"]>div.filteroptions>a[data-id=\"oos-1\"]")
+  cam$clickElement()
+  Sys.sleep(2)
   
   # Numar de stele
   st <- rmdSel$findElement(using = "css", value = "div.filterbox>div.filteroptions > a[data-id=\"class-3\"]")
   st$clickElement()
   st4 <- rmdSel$findElement(using = "css", value = "div.filterbox>div.filteroptions > a[data-id=\"class-4\"]")
   st4$clickElement()
+  Sys.sleep(2)
   
   # Hotel
   hot <- rmdSel$findElement(using = "css", value = "div.filterbox>div.filteroptions > a[data-id=\"ht_id-204\"]")
   hot$clickElement()
+  Sys.sleep(2)
   
-  # Numai camere disponibile
-  cam <- rmdSel$findElement(using = "css", value = "div.filterbox[id=\"filter_out_of_stock\"]>div.filteroptions>a[data-id=\"oos-1\"]")
-  cam$clickElement()
   
   # Mic dejun
   dejun <- rmdSel$findElement(using = "css", value = "div[id=\"filter_mealplan\"]>div.filteroptions>a.filterelement")
   dejun$clickElement()
+  Sys.sleep(2)
   
   # Pret RAMBURASBIL(anulare gratuita)/NERAMBURSABIL
   if (isTRUE(anulare_gratuita)) {
     ram <- rmdSel$findElement(using = "css", value = "div[id=\"filter_fc\"]>div.filteroptions>a.filterelement")
     ram$clickElement()
   }
+  Sys.sleep(2)
   
   try({
       no_pages <- rmdSel$findElement(using = "css", value = "li.bui-pagination__item:nth-last-child(1) > a > div:nth-child(2)")
@@ -95,7 +102,7 @@ for (i in 1:length(sejur_list)) {
       no_pages1 <- as.integer(no_pages)
     }, silent = TRUE
     )
-    
+  print(no_pages1)
   df <- data.frame()
   for(j in 1:no_pages1){
     rmdSel$executeScript(script = "window.scrollTo(0, document.body.scrollHeight);")
@@ -104,9 +111,9 @@ for (i in 1:length(sejur_list)) {
     stele <- booking %>% html_nodes(css = "i.bk-icon-wrapper>span.invisible_spoken") %>% html_text()
     hotel_name <- booking %>% html_nodes(css = "span.sr-hotel__name") %>% html_text()
     distanta <- booking %>% html_nodes(css = "div.sr_card_address_line>span:not([class])")%>% html_text()
-    pret <- booking %>% html_nodes(css = "div.bui-price-display__value") %>% html_text()
-    tip_camera <- booking %>% html_nodes(css = "a.room_link>strong") %>% html_text()
-    nr_nopti <- booking %>%  html_nodes(css = "div.prco-ltr-right-align-helper>div.bui-price-display__label") %>% html_text()
+    pret <- booking %>% html_nodes(css = "div.room_details>div>div>div:first-child>div.roomPrice>div.prco-wrapper>div>div.bui-price-display__value") %>% html_text()
+    tip_camera <- booking %>% html_nodes(css = "div.room_details>div>div>div:first-child>div.roomName>div>a.room_link>strong") %>% html_text()
+    nr_nopti <- booking %>%  html_nodes(css = "div.room_details>div>div>div:first-child>div.roomPrice>div.prco-wrapper>div.prco-ltr-right-align-helper>div.bui-price-display__label") %>% html_text()
     
     culegere <- rep(Sys.Date(), length(hotel_name))
     z1 <- strsplit(gsub("\\]|\\'", "", sejur_list[[i]][1]), "-", fixed = TRUE)[[1]][4]
@@ -125,7 +132,6 @@ for (i in 1:length(sejur_list)) {
     df <- rbind(df, df1)
       
     if (j < no_pages1) { 
-      print(j)
       next_page <- rmdSel$findElement(using = "css", value = "a.paging-next")
       next_page$clickElement()
     }
@@ -139,6 +145,7 @@ for (i in 1:length(sejur_list)) {
     names(df)[8] <- "pret_nerambursabil"
   }
   df_fin <- rbind(df_fin, df)
+  Sys.sleep(2)
 }
 
 
@@ -188,6 +195,7 @@ dfjfin <- rbind(df2j, df1j)
 distance <- function (df) {
   df$distanta <- gsub("la", "", df$distanta)
   df$distanta <- gsub("de centru", "", df$distanta)
+  df$distanta <- gsub("from center", "", df$distanta)
   df$distanta <- trimws(df$distanta)
   km <- grep("km", df$distanta)
   df$distanta_km <- ""
@@ -204,6 +212,9 @@ distance <- function (df) {
 }
 
 dfjfin <- distance(dfjfin)
+
+dfjfin$distanta_km <- gsub("\\.", "\\,", dfjfin$distanta_km)
+
 
 write.csv(dfjfin, paste0("hotel1_", Sys.Date(), ".csv"))
 

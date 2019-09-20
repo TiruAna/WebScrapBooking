@@ -23,6 +23,7 @@ anulare_gratuita = TRUE; mic_dejun_inclus = FALSE
 
 df_fin <- data.frame()
 for (i in 1:length(sejur_list)) {  
+  Sys.sleep(2)
   rmdSel <- remoteDriver(remoteServerAddr = "127.0.0.1",
                          port = 4444L,
                          browserName = "firefox")
@@ -32,9 +33,11 @@ for (i in 1:length(sejur_list)) {
   
   lang <- rmdSel$findElement(using = "css", value = "a.popover_trigger>img")
   lang$clickElement()
+  Sys.sleep(2)
   
   ro <- rmdSel$findElement(using = "css", value = "a[hreflang=\"ro\"].no_target_blank>span.seldescription")
   ro$clickElement()
+  Sys.sleep(2)
   
   search_location <- rmdSel$findElement(using = "css", value = "[name = 'ss']")
   search_location$sendKeysToElement(list(orase[1]))
@@ -181,11 +184,28 @@ df2fc <- clean(df2f)
 df2j <- df2fc %>% left_join(df2tc[,c(2,6,8)], by=c("nume_hotel"="nume_hotel","sejur"="sejur"))
 df2j <- unique(df2j)
 
-df2j$distanta <- gsub("la", "", df2j$distanta)
-df2j$distanta <- gsub("de centru", "", df2j$distanta)
-df2j$distanta <- trimws(df2j$distanta)
-km <- grep("km", df2j$distanta)
-df2j$distanta_km[km] <- df2j$distanta[km]
+distance <- function (df) {
+  df$distanta <- gsub("la", "", df$distanta)
+  df$distanta <- gsub("de centru", "", df$distanta)
+  df$distanta <- gsub("from center", "", df$distanta)
+  df$distanta <- trimws(df$distanta)
+  km <- grep("km", df$distanta)
+  df$distanta_km <- ""
+  df$distanta_m <- ""
+  df$distanta_km[km] <- df$distanta[km]
+  m <- seq(from = 1, to = nrow(df), by = 1)[-km]
+  df$distanta_m[m] <- df$distanta[m]
+  df$distanta_km <- trimws(gsub("km", "", df$distanta_km))
+  df$distanta_m <- trimws(gsub("m", "", df$distanta_m))
+  df$distanta_km <- as.numeric(gsub(",", ".", df$distanta_km))
+  df$distanta_m <- as.integer(df$distanta_m)
+  df <- df[,-c(3)]
+  return(df)
+}
+
+
+df2j <- distance(df2j)
+df2j$distanta_km <- gsub("\\.", "\\,", df2j$distanta_km)
 
 
 write.csv(df2j, paste0("hotel4_", Sys.Date(), ".csv"))

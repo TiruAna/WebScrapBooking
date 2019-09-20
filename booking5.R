@@ -37,6 +37,7 @@ for (i in 1:length(sejur_list)) {
   
   ro <- rmdSel$findElement(using = "css", value = "a[hreflang=\"ro\"].no_target_blank>span.seldescription")
   ro$clickElement()
+  Sys.sleep(2)
   
   search_location <- rmdSel$findElement(using = "css", value = "[name = 'ss']")
   search_location$sendKeysToElement(list(orase[1]))
@@ -55,10 +56,6 @@ for (i in 1:length(sejur_list)) {
   # Cauta
   search_send <- rmdSel$findElement(using  = "css", value = "button.sb-searchbox__button")
   search_send$clickElement()
-  
-  # Hostel
-  hot <- rmdSel$findElement(using = "css", value = "div.filterbox>div.filteroptions > a[data-id=\"ht_id-203\"]")
-  hot$clickElement()
   Sys.sleep(2)
   
   # Numai camere disponibile
@@ -66,30 +63,26 @@ for (i in 1:length(sejur_list)) {
   cam$clickElement()
   Sys.sleep(2)
   
-  # Baie privata
-  baie <- rmdSel$findElement(using = "css", value = "div.filteroptions>a[data-id=\"roomfacility-38\"]" )
-  baie$clickElement()
-  # "div.filterbox[id=\"filter_min_bathrooms\"]>div.filteroptions>a[data-id=\"min_bathrooms-1\"]"
+  # Hostel
+  hot <- rmdSel$findElement(using = "css", value = "div.filterbox>div.filteroptions > a[data-id=\"ht_id-203\"]")
+  hot$clickElement()
   Sys.sleep(2)
   
-  # Pret RAMBURASBIL(anulare gratuita)/NERAMBURSABIL
-  if (isTRUE(anulare_gratuita)) {
-    ram <- rmdSel$findElement(using = "css", value = "div[id=\"filter_fc\"]>div.filteroptions>a.filterelement")
-    ram$clickElement()
+  # Baie privata
+  if (baie_privata == TRUE) {
+    baie <- rmdSel$findElement(using = "css", value = "div.filteroptions>a[data-id=\"roomfacility-38\"]" )
+    baie$clickElement()
+    # "div.filterbox[id=\"filter_min_bathrooms\"]>div.filteroptions>a[data-id=\"min_bathrooms-1\"]"
   }
   Sys.sleep(2)
+  
   
   # Self-catering
   dejun <- rmdSel$findElement(using = "css", value = "div[id=\"filter_mealplan\"]>div.filteroptions>a[data-id=\"mealplan-999\"]")
   dejun$clickElement()
   #"div[id=\"filter_mealplan\"]>div.filteroptions>a.filterelement"
-  
   Sys.sleep(2)
   
-  # Numar de stele
-  st <- rmdSel$findElement(using = "css", value = "div.filterbox>div.filteroptions > a[data-id=\"class-1\"]")
-  st$clickElement()
-  Sys.sleep(2)
   
   no_pages1 <- 1
   try({
@@ -104,30 +97,23 @@ for (i in 1:length(sejur_list)) {
     rmdSel$executeScript(script = "window.scrollTo(0, document.body.scrollHeight);")
     booking <- read_html(rmdSel$getPageSource()[[1]])  
     
-    stele <- booking %>% html_nodes(css = "i.bk-icon-wrapper>span.invisible_spoken") %>% html_text()
-    hotel_name <- booking %>% html_nodes(css = "span.sr-hotel__name") %>% html_text()
+    hostel_name <- booking %>% html_nodes(css = "span.sr-hotel__name") %>% html_text()
     distanta <- booking %>% html_nodes(css = "div.sr_card_address_line>span:not([class])")%>% html_text()
     pret <- booking %>% html_nodes(css = "div.room_details>div>div>div:first-child>div.roomPrice>div.prco-wrapper>div>div.bui-price-display__value") %>% html_text()
     tip_camera <- booking %>% html_nodes(css = "div.room_details>div>div>div:first-child>div.roomName>div>a.room_link>strong") %>% html_text()
     nr_nopti <- booking %>%  html_nodes(css = "div.room_details>div>div>div:first-child>div.roomPrice>div.prco-wrapper>div.prco-ltr-right-align-helper>div.bui-price-display__label") %>% html_text()
-    
-    print(stele)
-    print(hotel_name)
-    
-    culegere <- rep(Sys.Date(), length(hotel_name))
+
+    culegere <- rep(Sys.Date(), length(hostel_name))
     z1 <- strsplit(gsub("\\]|\\'", "", sejur_list[[i]][1]), "-", fixed = TRUE)[[1]][4]
     z2 <- strsplit(gsub("\\]|\\'", "", sejur_list[[i]][2]), "-", fixed = TRUE)[[1]][4]
     period <- paste(paste(z1, z2, sep = "-"), "nov", sep = " ")
-    sejur <- rep(period, length(hotel_name))
-    rambursabil <- rep("DA", length(hotel_name))
-    df1 <- data.frame(nr_stele = stele,
-                      nume_hotel = hotel_name,
+    sejur <- rep(period, length(hostel_name))
+    df1 <- data.frame(nume_hostel = hostel_name,
                       distanta = distanta,
                       tip_camera = tip_camera,
                       nr_nopti = nr_nopti,
                       culegere = culegere, 
                       sejur = sejur,
-                      rambursabil = rambursabil,
                       pret = pret)
     df <- rbind(df, df1)
     
@@ -140,19 +126,17 @@ for (i in 1:length(sejur_list)) {
     Sys.sleep(2)
   }
   
-  if (isTRUE(mic_dejun_inclus)) {
-    names(df)[9] <- "pret_mic_dejun_inclus"
-  } else {
-    names(df)[9] <- "pret_fara_mic_dejun"
-  }
   df_fin <- rbind(df_fin, df)
+  Sys.sleep(2)
 }
 
-
-if (mic_dejun_inclus == TRUE) {
+df_fin$tip_baie <- ""
+if (baie_privata == TRUE) {
   df2t <- df_fin
-}else if (mic_dejun_inclus == FALSE) {
+  df2t$tip_baie <- "privata"
+}else {
   df2f <- df_fin
+  df2f$tip_baie <- "comuna"
 }
 
 
@@ -161,16 +145,17 @@ clean <- function (df) {
   for (i in 1:ncol(df)) {
     df[,c(i)] <- as.character(df[,c(i)])
   }
-  df$nume_hotel <- gsub("\n", "", df$nume_hotel)
+  df$nume_hostel <- gsub("\n", "", df$nume_hostel)
   df$distanta <- gsub("\n", "", df$distanta)
-  df[,c(9)] <- gsub("\n", "", df[,c(9)])
-  df[,c(9)] <- gsub("\\.", "", df[,c(9)])
-  df[,c(9)] <- gsub("\\,", "", df[,c(9)])
-  df[,c(9)] <- as.numeric(gsub("([0-9]+).*$", "\\1", df[,c(9)]))
+  df[,c(7)] <- gsub("\n", "", df[,c(7)])
+  df[,c(7)] <- gsub("\\.", "", df[,c(7)])
+  df[,c(7)] <- gsub("\\,", "", df[,c(7)])
+  df[,c(7)] <- as.numeric(gsub("([0-9]+).*$", "\\1", df[,c(7)]))
   pers_nopti <- data.frame(do.call(rbind, strsplit(df$nr_nopti, ",", fixed=TRUE)))
   names(pers_nopti) <- c("nr_nopti", "nr_pers")
-  df <- df[,-c(5)]
+  df <- df[,-c(4)]
   df <- cbind(df, pers_nopti)
+  df$mic_dejun <- "NU"
   return (df)
 }
 
@@ -178,16 +163,35 @@ clean <- function (df) {
 df2tc <- clean(df2t)
 df2fc <- clean(df2f)
 
+dfcom <- rbind(df2tc, df2fc)
 
-df2j <- df2fc %>% left_join(df2tc[,c(2,6,8)], by=c("nume_hotel"="nume_hotel","sejur"="sejur"))
-df2j <- unique(df2j)
 
-df2j$distanta <- gsub("la", "", df2j$distanta)
-df2j$distanta <- gsub("de centru", "", df2j$distanta)
-df2j$distanta <- trimws(df2j$distanta)
 
-write.csv(df2j, paste0("hotel4_", Sys.Date(), ".csv"))
+distance <- function (df) {
+  df$distanta <- gsub("la", "", df$distanta)
+  df$distanta <- gsub("de centru", "", df$distanta)
+  df$distanta <- gsub("from center", "", df$distanta)
+  df$distanta <- trimws(df$distanta)
+  km <- grep("km", df$distanta)
+  df$distanta_km <- ""
+  df$distanta_m <- ""
+  df$distanta_km[km] <- df$distanta[km]
+  m <- seq(from = 1, to = nrow(df), by = 1)[-km]
+  df$distanta_m[m] <- df$distanta[m]
+  df$distanta_km <- trimws(gsub("km", "", df$distanta_km))
+  df$distanta_m <- trimws(gsub("m", "", df$distanta_m))
+  df$distanta_km <- as.numeric(gsub(",", ".", df$distanta_km))
+  df$distanta_m <- as.integer(df$distanta_m)
+  df <- df[,-c(2)]
+  return(df)
+}
 
+dfcom <- distance(dfcom)
+
+
+dfcom$distanta_km <- gsub("\\.", "\\,", dfcom$distanta_km)
+
+write.csv(dfcom, paste0("hotel5_", Sys.Date(), ".csv"))
 
 
 

@@ -32,12 +32,15 @@ for (i in 1:length(sejur_list)) {
                          browserName = "firefox")
   rmdSel$open()
   rmdSel$navigate("https://www.booking.com/")
+  Sys.sleep(2)
   
   lang <- rmdSel$findElement(using = "css", value = "a.popover_trigger>img")
   lang$clickElement()
+  Sys.sleep(2)
   
   ro <- rmdSel$findElement(using = "css", value = "a[hreflang=\"ro\"].no_target_blank>span.seldescription")
   ro$clickElement()
+  Sys.sleep(2)
   
   search_location <- rmdSel$findElement(using = "css", value = "[name = 'ss']")
   search_location$sendKeysToElement(list(orase[1]))
@@ -56,30 +59,37 @@ for (i in 1:length(sejur_list)) {
   # Cauta
   search_send <- rmdSel$findElement(using  = "css", value = "button.sb-searchbox__button")
   search_send$clickElement()
+  Sys.sleep(2)
+  
+  # Numai camere disponibile
+  cam <- rmdSel$findElement(using = "css", value = "div.filterbox[id=\"filter_out_of_stock\"]>div.filteroptions>a[data-id=\"oos-1\"]")
+  cam$clickElement()
+  Sys.sleep(2)
   
   # Numar de stele
   st <- rmdSel$findElement(using = "css", value = "div.filterbox>div.filteroptions > a[data-id=\"class-3\"]")
   st$clickElement()
   st4 <- rmdSel$findElement(using = "css", value = "div.filterbox>div.filteroptions > a[data-id=\"class-4\"]")
   st4$clickElement()
+  Sys.sleep(2)
   
   # Hotel
   hot <- rmdSel$findElement(using = "css", value = "div.filterbox>div.filteroptions > a[data-id=\"ht_id-204\"]")
   hot$clickElement()
+  Sys.sleep(2)
   
-  # Numai camere disponibile
-  cam <- rmdSel$findElement(using = "css", value = "div.filterbox[id=\"filter_out_of_stock\"]>div.filteroptions>a[data-id=\"oos-1\"]")
-  cam$clickElement()
   
   # Mic dejun
   dejun <- rmdSel$findElement(using = "css", value = "div[id=\"filter_mealplan\"]>div.filteroptions>a.filterelement")
   dejun$clickElement()
+  Sys.sleep(2)
   
   # Pret RAMBURASBIL(anulare gratuita)/NERAMBURSABIL
   if (isTRUE(anulare_gratuita)) {
     ram <- rmdSel$findElement(using = "css", value = "div[id=\"filter_fc\"]>div.filteroptions>a.filterelement")
     ram$clickElement()
   }
+  Sys.sleep(2)
   
   try({
     no_pages <- rmdSel$findElement(using = "css", value = "li.bui-pagination__item:nth-last-child(1) > a > div:nth-child(2)")
@@ -179,6 +189,10 @@ df1j <- df1fc %>% left_join(df1tc[,c(2,6,7)], by=c("nume_hotel"="nume_hotel","se
 df1j <- unique(df1j)
 
 dfjfin <- rbind(df2j, df1j)
+dfjfin <- distance(dfjfin)
+
+dfjfin$distanta_km <- gsub("\\.", "\\,", dfjfin$distanta_km)
+
+write.csv(dfjfin, paste0("hotel2_", ".csv"))
 
 
-write.csv(dfjfin, paste0("hotel2_", Sys.Date(), ".csv"))

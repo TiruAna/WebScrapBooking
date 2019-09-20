@@ -67,29 +67,34 @@ for (i in 1:length(sejur_list)) {
   search_send <- rmdSel$findElement(using  = "css", value = "button.sb-searchbox__button")
   search_send$clickElement()
   
+  # Numai camere disponibile
+  cam <- rmdSel$findElement(using = "css", value = "div.filterbox[id=\"filter_out_of_stock\"]>div.filteroptions>a[data-id=\"oos-1\"]")
+  cam$clickElement()
+  Sys.sleep(2)
+  
   # Numar de stele
   st <- rmdSel$findElement(using = "css", value = "div.filterbox>div.filteroptions > a[data-id=\"class-2\"]")
   st$clickElement()
+  Sys.sleep(2)
   
   # Hotel
   hot <- rmdSel$findElement(using = "css", value = "div.filterbox>div.filteroptions > a[data-id=\"ht_id-204\"]")
   hot$clickElement()
-  
-  # Numai camere disponibile
-  cam <- rmdSel$findElement(using = "css", value = "div.filterbox[id=\"filter_out_of_stock\"]>div.filteroptions>a[data-id=\"oos-1\"]")
-  cam$clickElement()
+  Sys.sleep(2)
   
   # Pret RAMBURASBIL(anulare gratuita)/NERAMBURSABIL
   if (isTRUE(anulare_gratuita)) {
     ram <- rmdSel$findElement(using = "css", value = "div[id=\"filter_fc\"]>div.filteroptions>a.filterelement")
     ram$clickElement()
   }
+  Sys.sleep(2)
   
   # Mic dejun
   if (isTRUE(mic_dejun_inclus)) {
     dejun <- rmdSel$findElement(using = "css", value = "div[id=\"filter_mealplan\"]>div.filteroptions>a.filterelement")
     dejun$clickElement()
   }
+  Sys.sleep(2)
   
   no_pages1 <- 1
   try({
@@ -172,7 +177,6 @@ clean <- function (df) {
   names(pers_nopti) <- c("nr_nopti", "nr_pers")
   df <- df[,-c(5)]
   df <- cbind(df, pers_nopti)
-  df$mic_dejun <- "DA"
   return (df)
 }
 
@@ -182,13 +186,36 @@ df2fc <- clean(df2f)
 df1tc <- clean(df1t)
 df1fc <- clean(df1f)
 
-df2j <- df2fc %>% left_join(df2tc[,c(2,6,7)], by=c("nume_hotel"="nume_hotel","sejur"="sejur"))
+df2j <- df2fc %>% left_join(df2tc[,c(2,6,8)], by=c("nume_hotel"="nume_hotel","sejur"="sejur"))
 df2j <- unique(df2j)
-df1j <- df1fc %>% left_join(df1tc[,c(2,6,7)], by=c("nume_hotel"="nume_hotel","sejur"="sejur"))
+df1j <- df1fc %>% left_join(df1tc[,c(2,6,8)], by=c("nume_hotel"="nume_hotel","sejur"="sejur"))
 df1j <- unique(df1j)
 
 dfjfin <- rbind(df2j, df1j)
 
+
+distance <- function (df) {
+  df$distanta <- gsub("la", "", df$distanta)
+  df$distanta <- gsub("de centru", "", df$distanta)
+  df$distanta <- gsub("from center", "", df$distanta)
+  df$distanta <- trimws(df$distanta)
+  km <- grep("km", df$distanta)
+  df$distanta_km <- ""
+  df$distanta_m <- ""
+  df$distanta_km[km] <- df$distanta[km]
+  m <- seq(from = 1, to = nrow(df), by = 1)[-km]
+  df$distanta_m[m] <- df$distanta[m]
+  df$distanta_km <- trimws(gsub("km", "", df$distanta_km))
+  df$distanta_m <- trimws(gsub("m", "", df$distanta_m))
+  df$distanta_km <- as.numeric(gsub(",", ".", df$distanta_km))
+  df$distanta_m <- as.integer(df$distanta_m)
+  df <- df[,-c(3)]
+  return(df)
+}
+
+
+dfjfin <- distance(dfjfin)
+dfjfin$distanta_km <- gsub("\\.", "\\,", dfjfin$distanta_km)
 
 write.csv(dfjfin, paste0("hotel3_", Sys.Date(), ".csv"))
 
