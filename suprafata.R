@@ -32,7 +32,9 @@ click_hot$clickElement()
 Sys.sleep(2)
 
 # Click camera
-click_camera <- rmdSel$findElement(using  = "css", value = "td.ftd>div>div.room-info>a.jqrt:first-of-type")
+click_camera <- rmdSel$findElement(using  = "css", value = "div.bodyconstraint_increased-min-width>div>div>div>div.rlt-right>div.hotelchars>div>div>div.description>table>tbody>tr.odd:first-child>td>div>div>a.jqrt")
+
+rmdSel$findElement(using  = "css", value ="div.room-info")
 click_camera$clickElement()
 Sys.sleep(2)
 
