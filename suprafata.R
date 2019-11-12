@@ -5,23 +5,29 @@ library(rvest)
 
 s <- Sys.time()
 sup <- c()
+hot <- c()
 
-for (i in 1:806) {
+for (i in 1:nrow(hotel1_2019.09.16)) {
+  print(i)
   rmdSel <- remoteDriver(remoteServerAddr = "127.0.0.1",
                          port = 4444L,
                          browserName = "firefox")
   
   rmdSel$open()
   rmdSel$navigate("https://www.booking.com/")
+  Sys.sleep(2)
   
   lang <- rmdSel$findElement(using = "css", value = "a.popover_trigger>img")
   lang$clickElement()
+  Sys.sleep(2)
   
   ro <- rmdSel$findElement(using = "css", value = "a[hreflang=\"ro\"].no_target_blank>span.seldescription")
   ro$clickElement()
+  Sys.sleep(2)
   
   search_location <- rmdSel$findElement(using = "css", value = "[name = 'ss']")
   search_location$sendKeysToElement(list(hotel1_2019.09.16$nume_hotel[i]))
+  hot <- c(hot, hotel1_2019.09.16$nume_hotel[i])
   
   # Cauta
   search_send <- rmdSel$findElement(using  = "css", value = "button.sb-searchbox__button")
@@ -53,6 +59,12 @@ for (i in 1:806) {
   x <- gsub(" ", "", x)
   x <- gsub("m².*","",x)
   x <- gsub("[^[:digit:].]", "",  x)
+  if (length(x)==0) {
+    hotel1_2019.09.16$suprafata[i] <- NA
+  } else {
+    hotel1_2019.09.16$suprafata[i] <- x
+  }
+  
   sup <- c(sup, x)
   rmdSel$close()
 }
